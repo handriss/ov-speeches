@@ -1,0 +1,7 @@
+version: "3"
+
+services:
+  akka-worker:
+    build: ./akka-worker
+    ports:
+      - "80:8080"
