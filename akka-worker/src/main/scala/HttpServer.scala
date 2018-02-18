@@ -4,6 +4,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import service.ScraperService
+import service.HealthCheckService
 
 
 object HttpServer {
@@ -14,8 +15,9 @@ object HttpServer {
     implicit val executionContext = system.dispatcher
 
     val service: ScraperService = new ScraperService()
+    val healthCheckService = new HealthCheckService()
 
-    val healthCheck: Route = (get & (path("healthCheck") | path("healthcheck")))(complete("""{"success":true}"""))
+    val healthCheck: Route = (get & (path("healthCheck") | path("healthcheck")))(complete(healthCheckService.execute()))
     val exampleScraper: Route = (get & path("example"))(complete(service.returnExample()))
 
     val routes: Route = healthCheck ~ exampleScraper
