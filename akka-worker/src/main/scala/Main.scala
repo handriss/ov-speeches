@@ -1,21 +1,26 @@
 import actor.WorkerActor
-import actor.WorkerActor.HealthCheck
-import akka.actor.Status.Failure
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.pattern.ask
-import akka.stream.ActorMaterializer
+import akka.http.scaladsl.server.{ExceptionHandler, Route}
+import akka.stream.{ActorMaterializer, StreamTcpException}
 import akka.util.Timeout
-import service.JsonSupport
+import service.{HealthCheckService, JsonSupport}
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+
 
 object Main extends JsonSupport {
 
+  implicit def myExceptionHandler: ExceptionHandler =
+    ExceptionHandler {
+      case _: StreamTcpException =>
+        extractUri { uri =>
+          println(s"Request to $uri could not be handled normally")
+          complete(HttpResponse(StatusCodes.InternalServerError, entity = "Bad numbers, bad result!!!"))
+        }
+    }
 
   def main(args: Array[String]): Unit = {
     implicit val system = ActorSystem("Main")
@@ -23,13 +28,10 @@ object Main extends JsonSupport {
     implicit val timeout = Timeout(5.seconds)
     implicit val executionContext = system.dispatcher
     val worker: ActorRef = system.actorOf(Props[WorkerActor], "WorkerActor")
+    val healthCheckService = new HealthCheckService()
 
     val healthCheck: Route = (get & (path("healthCheck") | path("healthcheck"))) {
-      onComplete(worker ? HealthCheck) {
-        case Success(value) => complete(s"The result was $value")
-        case value => complete(s"The result was $value")
-      }
-//      (worker ? HealthCheck).foreach(response => println(response))
+      complete(healthCheckService.execute())
     }
     val routes: Route = healthCheck
 

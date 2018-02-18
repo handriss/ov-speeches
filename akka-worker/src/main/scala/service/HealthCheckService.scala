@@ -1,14 +1,14 @@
 package service
 
-import actor.WorkerActor.HealthCheckResponse
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCode, StatusCodes}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import spray.json.DefaultJsonProtocol
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
+
+case class HealthCheckResponse(akkaResponse: String, frontendResponse: String, elasticResponse: String)
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -18,7 +18,6 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 class HealthCheckService(implicit ec: ExecutionContext, implicit val system: ActorSystem) {
 
   def execute() = {
-
     for {
       frontendResponse <- Http().singleRequest(HttpRequest(uri = "http://localhost:4200/"))
       elasticResponse <- Http().singleRequest(HttpRequest(uri = "http://localhost:9200/"))
