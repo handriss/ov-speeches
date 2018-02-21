@@ -7,7 +7,7 @@ import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr => _, eleme
 
 import scala.collection.immutable.IndexedSeq
 
-case class Speech(url: String, title: String, lead: String, body: Seq[String])
+case class Speech(uid: String, title: String, lead: String, body: Seq[String])
 
 class ScraperService {
 
