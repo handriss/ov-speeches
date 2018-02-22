@@ -1,5 +1,6 @@
 package service
 
+import akka.http.scaladsl.model.Uri
 import net.ruippeixotog.scalascraper.browser.{Browser, JsoupBrowser}
 import net.ruippeixotog.scalascraper.dsl.DSL.Extract._
 import net.ruippeixotog.scalascraper.dsl.DSL._
@@ -26,7 +27,7 @@ class ScraperService {
       title = currentPage >> "#post_title" >> text
       lead = currentPage >> "#post_lead" >> text
       body = currentPage >> elementList("#post_content_col_1>p") >> text
-
-    } yield Speech(currentLink, title, lead, body)
+      uid = Uri(currentLink).path.toString
+    } yield Speech(uid, title, lead, body)
   }
 }
