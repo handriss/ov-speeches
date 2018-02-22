@@ -14,7 +14,8 @@ libraryDependencies ++= Seq(
   "net.ruippeixotog" %% "scala-scraper" % "2.1.0",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.0-RC2",
   "ch.qos.logback" % "logback-classic" % "1.1.7",
-  "com.typesafe.akka" % "akka-slf4j_2.11" % "2.5.9"
+  "com.typesafe.akka" % "akka-slf4j_2.11" % "2.5.9",
+  "io.spray" %%  "spray-json" % "1.3.3"
 )
 
 assemblySettings

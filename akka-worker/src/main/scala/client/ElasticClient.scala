@@ -12,6 +12,9 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import spray.json._
+import DefaultJsonProtocol._
+import akka.util.ByteString
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val speechFormat: RootJsonFormat[Speech] = jsonFormat4(Speech)
@@ -43,7 +46,24 @@ class ElasticClient(implicit val ec: ExecutionContext, implicit val ac: ActorSys
   }
 
   def postSpeech(speeches: Seq[Speech]): Unit = {
-//    TODO: implement bulk api call
-    speeches.foreach{ speech => postSpeech(speech)}
+    val entity = generateBulkRequestEntity(speeches)
+    val response: Future[HttpResponse] = Http().singleRequest(HttpRequest(
+      uri = s"${config.getString("elasticsearch.index-url")}speech/_bulk",
+      method = HttpMethods.POST,
+      entity = HttpEntity.Strict(MediaTypes.`application/json`, ByteString(entity))
+    ))
+    response.onComplete {
+      case Success(HttpResponse(StatusCodes.Created, _, payload, _)) =>
+        log.info("Bulk indexing successful.")
+      case Success(HttpResponse(statusCode, x, y, z)) =>
+        log.info("Document is already indexed, rejected with status code \n{} \n{} \n{} \n{}", statusCode, x, y, z)
+      case Failure(reason) => log.info("Indexing failed, {}", reason)
+    }
+
+  }
+
+  private def generateBulkRequestEntity(speeches: Seq[Speech]): String = {
+    val speechAggregator: (String, Speech) => String = (aggregatedSpeeches, currentSpeech) => aggregatedSpeeches + "\n" + "{\"index\":{}}\n" + currentSpeech.toJson
+    speeches.aggregate("")(speechAggregator, _ + _) + "\n"
   }
 }

@@ -19,7 +19,7 @@ class ScraperService {
 //    pageNumber <- 0 until (doc >> element(".navigation ul li:nth-last-child(2) a") >> text toInt)
 
     for {
-      pageNumber <- 0 until 1
+      pageNumber <- 0 until (doc >> element(".navigation ul li:nth-last-child(2) a") >> text toInt)
       currentParentPage = browser.get(s"http://www.miniszterelnok.hu/category/beszedek/page/$pageNumber/")
       speechLinks <- currentParentPage >> elementList("#category_element a") >?> attr("href")("a")
       currentLink <- speechLinks

@@ -1,5 +1,6 @@
 import actor.WebScraperActor
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -8,10 +9,8 @@ import akka.util.Timeout
 import client.ElasticClient
 import com.typesafe.config.ConfigFactory
 import exception.CustomExceptionHandler
-import service.{HealthCheckService, ScraperService, Speech}
-import akka.event.Logging
+import service.{HealthCheckService, ScraperService}
 
-import scala.collection.immutable.IndexedSeq
 import scala.concurrent.duration._
 
 
@@ -24,10 +23,11 @@ object Main extends CustomExceptionHandler {
     implicit val executionContext = system.dispatcher
     val config = ConfigFactory.load()
 
-    val worker: ActorRef = system.actorOf(Props[WebScraperActor], "WebScraperActor")
+
     val healthCheckService = new HealthCheckService()
     val scraperService = new ScraperService()
     val client = new ElasticClient()
+    val worker: ActorRef = system.actorOf(Props(classOf[WebScraperActor], scraperService, client), "WebScraperActor")
 
     val log = Logging(system, "Main")
     log.debug("Runner IS UP BABY")
@@ -36,8 +36,6 @@ object Main extends CustomExceptionHandler {
       complete(healthCheckService.execute())
     }
     val example: Route = (get & path("example")){
-      val speeches: IndexedSeq[Speech] = scraperService.scrape()
-      client.postSpeech(speeches)
       complete("""example called""")
     }
 
@@ -51,6 +49,3 @@ object Main extends CustomExceptionHandler {
 
   }
 }
-
-//set up config
-//find out how api should look like, from frontend to akka, from akka to elastic
