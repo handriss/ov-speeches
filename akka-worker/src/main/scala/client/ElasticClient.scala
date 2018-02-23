@@ -17,7 +17,7 @@ import DefaultJsonProtocol._
 import akka.util.ByteString
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val speechFormat: RootJsonFormat[Speech] = jsonFormat4(Speech)
+  implicit val speechFormat: RootJsonFormat[Speech] = jsonFormat5(Speech)
 }
 
 class ElasticClient(implicit val ec: ExecutionContext, implicit val ac: ActorSystem) extends JsonSupport{
@@ -45,10 +45,10 @@ class ElasticClient(implicit val ec: ExecutionContext, implicit val ac: ActorSys
     }
   }
 
-  def postSpeech(speeches: Seq[Speech], category: String): Unit = {
+  def postSpeech(speeches: Seq[Speech]): Unit = {
     val entity = generateBulkRequestEntity(speeches)
     val response: Future[HttpResponse] = Http().singleRequest(HttpRequest(
-      uri = s"${config.getString("elasticsearch.index-url")}$category/_bulk",
+      uri = s"${config.getString("elasticsearch.index-url")}/_bulk",
       method = HttpMethods.POST,
       entity = HttpEntity.Strict(MediaTypes.`application/json`, ByteString(entity))
     ))
