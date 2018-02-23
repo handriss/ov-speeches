@@ -26,8 +26,10 @@ class WebScraperActor(service: ScraperService, client: ElasticClient) extends Ac
   val log = Logging(system, this)
 
   def runCrawler() = {
-    val speeches: IndexedSeq[Speech] = service.scrape()
-    client.postSpeech(speeches)
+    val speeches: (IndexedSeq[Speech], IndexedSeq[Speech]) = service.scrape()
+
+    client.postSpeech(speeches._1, "speeches/speech")
+    client.postSpeech(speeches._2, "interviews/interview")
   }
   runCrawler()
   timers.startPeriodicTimer(TickKey, RunCrawler, 12.hours)

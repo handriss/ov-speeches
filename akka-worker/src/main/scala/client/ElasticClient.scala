@@ -45,10 +45,10 @@ class ElasticClient(implicit val ec: ExecutionContext, implicit val ac: ActorSys
     }
   }
 
-  def postSpeech(speeches: Seq[Speech]): Unit = {
+  def postSpeech(speeches: Seq[Speech], category: String): Unit = {
     val entity = generateBulkRequestEntity(speeches)
     val response: Future[HttpResponse] = Http().singleRequest(HttpRequest(
-      uri = s"${config.getString("elasticsearch.index-url")}speech/_bulk",
+      uri = s"${config.getString("elasticsearch.index-url")}$category/_bulk",
       method = HttpMethods.POST,
       entity = HttpEntity.Strict(MediaTypes.`application/json`, ByteString(entity))
     ))
